@@ -51,11 +51,12 @@ class EbtablesVLAN < VNMMAD::NoVLANDriver
                 mac[-1] = '00'
 
                 net_mac = mac.join(':')
-
-                in_rule="FORWARD -s ! #{net_mac}/ff:ff:ff:ff:ff:00 " <<
-                        "-o #{tap} -j DROP"
+                
+                bc_rule="FORWARD -d ff:ff:ff:ff:ff:ff -o #{tap} -j ACCEPT"
+                in_rule="FORWARD -d ! #{iface_mac} -o #{tap} -j DROP"
                 out_rule="FORWARD -s ! #{iface_mac} -i #{tap} -j DROP"
-
+                
+                ebtables(bc_rule) if nic[:filter_mac_spoofing] =~ /yes/i
                 ebtables(in_rule) if nic[:filter_mac_spoofing] =~ /yes/i
                 ebtables(out_rule)
             end
